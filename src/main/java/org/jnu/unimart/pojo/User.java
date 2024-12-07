@@ -1,5 +1,6 @@
 package org.jnu.unimart.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 @Entity
 @Table(name = "users")
@@ -11,6 +12,7 @@ public class User {
     @Column(name = "username")
     private String userName;
     @Column(name = "password")
+    @JsonIgnore // 这个注解将会在序列化时忽略这个字段
     private String userPassword;
     @Column(name = "account")
     private String account; // 电话或者邮箱
