@@ -49,7 +49,7 @@ class UserServiceImplTest {
     @Test
     void createUser() {
         System.out.println(userServiceImpl.createUser("test", "123", "1fds23"));
-        System.out.println(userRepository.findUsersByAccount("1fds23"));
+        System.out.println(userRepository.findUserByAccount("1fds23"));
     }
 
     @Test

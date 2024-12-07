@@ -2,30 +2,68 @@ package org.jnu.unimart.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
-@Table(name = "users")
+@Table(name = "users") // 确保表名为 "users"
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
+    @Column(name = "user_id") // 数据库中的列名
     private int userId;
-    @Column(name = "username")
+
+    @Column(name = "username", nullable = false) // 确保非空
     private String userName;
-    @Column(name = "password")
-    @JsonIgnore // 这个注解将会在序列化时忽略这个字段
+
+    @Column(name = "password", nullable = false)
+    @JsonIgnore // 序列化时忽略密码字段
     private String userPassword;
-    @Column(name = "account")
-    private String account; // 电话或者邮箱
-    @Column(name = "student_status")
+
+    @Column(name = "account", nullable = false, unique = true) // 电话或邮箱，确保唯一
+    private String account;
+
+    @Column(name = "student_status", nullable = false)
     private int studentStatus; // 状态 0：未认证，1：认证
+
     @Column(name = "personal_rating_buyer")
     private double personalRatingBuyer; // 作为买家的评分
+
     @Column(name = "personal_rating_seller")
     private double personalRatingSeller; // 作为卖家的评分
+
     @Column(name = "avatar")
-    private String avatar; //头像url
+    private String avatar; // 头像 URL
+
     @Column(name = "address")
-    private String address; //地址
+    private String address; // 地址
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"), // 与数据库列名一致
+            inverseJoinColumns = @JoinColumn(name = "role_id") // 与数据库列名一致
+    )
+    private Set<Role> roles = new HashSet<>();
+
+    // Constructors
+
+    public User() {}
+
+    public User(String userName, String userPassword, String account, int studentStatus,
+                double personalRatingBuyer, double personalRatingSeller, String avatar, String address) {
+        this.userName = userName;
+        this.userPassword = userPassword;
+        this.account = account;
+        this.studentStatus = studentStatus;
+        this.personalRatingBuyer = personalRatingBuyer;
+        this.personalRatingSeller = personalRatingSeller;
+        this.avatar = avatar;
+        this.address = address;
+    }
+
+    // Getters and Setters
 
     public int getUserId() {
         return userId;
@@ -99,18 +137,11 @@ public class User {
         this.address = address;
     }
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "userId=" + userId +
-                ", userName='" + userName + '\'' +
-                ", userPassword='" + userPassword + '\'' +
-                ", account='" + account + '\'' +
-                ", studentStatus=" + studentStatus +
-                ", personalRatingBuyer=" + personalRatingBuyer +
-                ", personalRatingSeller=" + personalRatingSeller +
-                ", avatar='" + avatar + '\'' +
-                ", address='" + address + '\'' +
-                '}';
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 }

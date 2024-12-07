@@ -3,12 +3,14 @@ package org.jnu.unimart.service.impl;
 import jakarta.transaction.Transactional;
 import org.jnu.unimart.exception.UserNotFoundException;
 import org.jnu.unimart.pojo.User;
+import org.jnu.unimart.repository.RoleRepository;
 import org.jnu.unimart.repository.UserRepository;
 import org.jnu.unimart.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,11 +18,13 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
     }
 
 
@@ -37,7 +41,12 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
-    // Optional<User> 当可以接受一个null
+    /**
+     * 通过id获取用户信息，
+     * Optional<User> 当可以接受一个null
+     * @param id
+     * @return
+     */
     @Transactional
     @Override
     public Optional<User> getUserById(int id) {
@@ -45,41 +54,66 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id);
     }
 
+    /**
+     * 通过用户名获取用户信息
+     * @param userName
+     * @return
+     */
     @Transactional
     @Override
     public Optional<User> getUserByUsername(String userName) {
-        return Optional.ofNullable(userRepository.findByUserName(userName));
-    }
-
-    @Transactional
-    @Override
-    public Optional<User> getUserByAccount(String account) {
-        return Optional.ofNullable(userRepository.findUsersByAccount(account));
+        Optional<User> userByUsername = userRepository.findByUserName(userName);
+        if(userByUsername.isPresent()) {
+            return userByUsername;
+        }
+        else {
+            throw new UserNotFoundException("User not found with username: " + userName);
+        }
     }
 
     /**
-     * 创建用户
-     * @param userName
-     * @param userPassword
+     * 通过账户获得用户信息
      * @param account
      * @return
      */
     @Transactional
     @Override
-    public boolean createUser(String userName, String userPassword, String account) {
-        if (userRepository.findUsersByAccount(account) != null) {
-            System.out.println(userRepository.findUsersByAccount(account));
-            throw new UserNotFoundException("User already exists");
+    public Optional<User> getUserByAccount(String account) {
+        Optional<User> userByAccount = userRepository.findUserByAccount(account);
+        if (userByAccount.isPresent()) {
+            return userByAccount;
         }
-        String encode = passwordEncoder.encode(userPassword);
-        System.out.println(encode);
-        User user = new User();
-        user.setUserName(userName);
-        user.setUserPassword(encode);
-        user.setAccount(account);
-        userRepository.save(user);
-        return true;
+        else {
+            throw new UserNotFoundException("User not found account:"+account);
+        }
     }
+
+
+    // 感觉这个方法可以不用
+//    /**
+//     * 创建用户
+//     * @param userName
+//     * @param userPassword
+//     * @param account
+//     * @return
+//     */
+//    @Transactional
+//    @Override
+//    public boolean createUser(String userName, String userPassword, String account) {
+//        if (userRepository.findUserByAccount(account) != null) {
+//            System.out.println(userRepository.findUserByAccount(account));
+//            throw new UserNotFoundException("User already exists");
+//        }
+//        String encode = passwordEncoder.encode(userPassword);
+//        System.out.println(encode);
+//        User user = new User();
+//        user.setUserName(userName);
+//        user.setUserPassword(encode);
+//        user.setAccount(account);
+//        user.setRoles(Collections.singleton(roleRepository.findByName("ROLE_USER").get()));
+//        userRepository.save(user);
+//        return true;
+//    }
 
     /**
      * 更新用户信息
@@ -155,7 +189,5 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.deleteById(id);
     }
-
-
 
 }
