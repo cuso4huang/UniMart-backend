@@ -117,7 +117,7 @@ public class WebSecurityConfig {
                 // 配置授权规则
                 .authorizeHttpRequests(authorize -> authorize
                         // 允许未认证访问的端点
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register","/api/products/**").permitAll()
                         // 其他所有请求需要认证
                         .anyRequest().authenticated())
 

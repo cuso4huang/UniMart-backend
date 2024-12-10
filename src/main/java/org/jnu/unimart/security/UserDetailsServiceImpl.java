@@ -33,7 +33,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .collect(Collectors.toList());
 
 
-        return new UserDetailsImpl(user.getUserName(), user.getUserPassword(), authorities);
+        return new UserDetailsImpl(user.getUserId(),user.getUserName(), user.getUserPassword(), authorities);
 
     }
 }

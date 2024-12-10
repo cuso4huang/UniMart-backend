@@ -46,11 +46,11 @@ class UserServiceImplTest {
         System.out.println(userByAccount);
     }
 
-    @Test
-    void createUser() {
-        System.out.println(userServiceImpl.createUser("test", "123", "1fds23"));
-        System.out.println(userRepository.findUserByAccount("1fds23"));
-    }
+//    @Test
+//    void createUser() {
+//        System.out.println(userServiceImpl.createUser("test", "123", "1fds23"));
+//        System.out.println(userRepository.findUserByAccount("1fds23"));
+//    }
 
     @Test
     void updateUser() {

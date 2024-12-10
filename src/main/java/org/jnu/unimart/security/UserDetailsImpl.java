@@ -29,6 +29,13 @@ public class UserDetailsImpl implements UserDetails {
         this.authorities = authorities;
     }
 
+    public UserDetailsImpl(int userId, String userName, String userPassword, Collection<GrantedAuthority> authorities) {
+        this.username = userName;
+        this.password = userPassword;
+        this.authorities = authorities;
+        this.id = userId;
+    }
+
     public static UserDetailsImpl build(User user) {
         return new UserDetailsImpl(
                 user.getUserId(),

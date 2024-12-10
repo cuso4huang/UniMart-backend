@@ -43,6 +43,7 @@ public class JwtUtils {
                 .collect(Collectors.toList());
         return Jwts.builder()
                 .setSubject(userPrincipal.getUsername()) // 用户名作为主体
+                .claim("UserId", userPrincipal.getId())
                 .setIssuedAt(new Date()) // 签发时间
                 .claim("roles", roles) // 添加角色信息
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs)) // 过期时间

@@ -125,7 +125,7 @@ public class UserServiceImpl implements UserService {
     public User updateUser(User user) {
         // 检查用户是否存在
         Optional<User> optionalExistingUser = userRepository.findById(user.getUserId());
-        if (!optionalExistingUser.isPresent()) {
+        if (optionalExistingUser.isEmpty()) {
             throw new UserNotFoundException("User with ID " + user.getUserId() + " not found");
         }
 
