@@ -89,4 +89,10 @@ public class UserDetailsImpl implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    public boolean hasRole(String role) {
+        if (role == null) return false;
+        return authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
+    }
 }

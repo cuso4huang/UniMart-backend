@@ -1,6 +1,10 @@
+// src/main/java/org/jnu/unimart/pojo/Transaction.java
+
 package org.jnu.unimart.pojo;
 
 import jakarta.persistence.*;
+import org.jnu.unimart.enums.PaymentMethod;
+import org.jnu.unimart.enums.TransactionStatus;
 
 import java.time.LocalDateTime;
 
@@ -9,29 +13,40 @@ import java.time.LocalDateTime;
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "tansaction_id")
+    @Column(name = "transaction_id")
     private int transactionId;
-    @Column(name = "product_id")
-    private int productId;
-    @Column(name = "buyer_id")
-    private int buyerId;
-    @Column(name = "seller_id")
-    private int sellerId;
-    @Column(name = "transaction_status")
-    private int transactionStatus; // 交易状态 ：0：待支付，1：已支付，2：已完成
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "buyer_id", nullable = false)
+    private User buyer;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "seller_id", nullable = false)
+    private User seller;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transaction_status", nullable = false)
+    private TransactionStatus transactionStatus; // 交易状态
+
     @Column(name = "transaction_time")
     private LocalDateTime transactionTime;
-    @Column(name = "payment")
-    private int payment; // 交易方式 ： 0：微信，1：支付宝
-    @Column(name = "total_amount")
-    private double totalAmount; // 总金额
 
-    public int getSellerId() {
-        return sellerId;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
+    private PaymentMethod paymentMethod; // 交易方式
 
-    public void setSellerId(int sellerId) {
-        this.sellerId = sellerId;
+    @Column(name = "total_amount", nullable = false)
+    private Double totalAmount; // 总金额
+
+    @Column(name = "payment_intent_id")
+    private String paymentIntentId; // 支付意图 ID，用于支付网关（模拟时可忽略或保留用于扩展）
+
+    // 构造函数
+    public Transaction() {
     }
 
     public int getTransactionId() {
@@ -42,27 +57,35 @@ public class Transaction {
         this.transactionId = transactionId;
     }
 
-    public int getProductId() {
-        return productId;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setProductId(int productId) {
-        this.productId = productId;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
-    public int getBuyerId() {
-        return buyerId;
+    public User getBuyer() {
+        return buyer;
     }
 
-    public void setBuyerId(int buyerId) {
-        this.buyerId = buyerId;
+    public void setBuyer(User buyer) {
+        this.buyer = buyer;
     }
 
-    public int getTransactionStatus() {
+    public User getSeller() {
+        return seller;
+    }
+
+    public void setSeller(User seller) {
+        this.seller = seller;
+    }
+
+    public TransactionStatus getTransactionStatus() {
         return transactionStatus;
     }
 
-    public void setTransactionStatus(int transactionStatus) {
+    public void setTransactionStatus(TransactionStatus transactionStatus) {
         this.transactionStatus = transactionStatus;
     }
 
@@ -74,33 +97,42 @@ public class Transaction {
         this.transactionTime = transactionTime;
     }
 
-    public int getPayment() {
-        return payment;
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
     }
 
-    public void setPayment(int payment) {
-        this.payment = payment;
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 
-    public double getTotalAmount() {
+    public Double getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(double totalAmount) {
+    public void setTotalAmount(Double totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public String getPaymentIntentId() {
+        return paymentIntentId;
+    }
+
+    public void setPaymentIntentId(String paymentIntentId) {
+        this.paymentIntentId = paymentIntentId;
     }
 
     @Override
     public String toString() {
         return "Transaction{" +
                 "transactionId=" + transactionId +
-                ", productId=" + productId +
-                ", buyerId=" + buyerId +
-                ", sellerId=" + sellerId +
+                ", product=" + product +
+                ", buyer=" + buyer +
+                ", seller=" + seller +
                 ", transactionStatus=" + transactionStatus +
                 ", transactionTime=" + transactionTime +
-                ", payment=" + payment +
+                ", paymentMethod=" + paymentMethod +
                 ", totalAmount=" + totalAmount +
+                ", paymentIntentId='" + paymentIntentId + '\'' +
                 '}';
     }
 }
