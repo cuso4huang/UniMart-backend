@@ -36,7 +36,7 @@ public class Product {
     private Category category;
 
     // 多对多关系：一个商品可以有多个标签，一个标签可以有多个商品
-    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
             name = "product_tags",
             joinColumns = @JoinColumn(name = "product_id"),
