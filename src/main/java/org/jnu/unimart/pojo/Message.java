@@ -4,19 +4,19 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "notifications")
-public class Notification {
+@Table(name = "messages")
+public class Message {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "notification_id")
-    private Integer notificationId;
+    @Column(name = "message_id")
+    private Integer messageId;
     
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    @Column(name = "sender_id", nullable = false)
+    private Integer senderId;
     
-    @Column(name = "type", nullable = false)
-    private String type;
+    @Column(name = "receiver_id", nullable = false)
+    private Integer receiverId;
     
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -34,28 +34,28 @@ public class Notification {
 
     // Getters 和 Setters
 
-    public Integer getNotificationId() {
-        return notificationId;
+    public Integer getMessageId() {
+        return messageId;
     }
 
-    public void setNotificationId(Integer notificationId) {
-        this.notificationId = notificationId;
+    public void setMessageId(Integer messageId) {
+        this.messageId = messageId;
     }
 
-    public Integer getUserId() {
-        return userId;
+    public Integer getSenderId() {
+        return senderId;
     }
 
-    public void setUserId(Integer userId) {
-        this.userId = userId;
+    public void setSenderId(Integer senderId) {
+        this.senderId = senderId;
     }
 
-    public String getType() {
-        return type;
+    public Integer getReceiverId() {
+        return receiverId;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setReceiverId(Integer receiverId) {
+        this.receiverId = receiverId;
     }
 
     public String getContent() {

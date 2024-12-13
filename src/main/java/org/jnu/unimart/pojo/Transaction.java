@@ -135,4 +135,8 @@ public class Transaction {
                 ", paymentIntentId='" + paymentIntentId + '\'' +
                 '}';
     }
+
+    public boolean isCompleted() {
+        return transactionStatus == TransactionStatus.COMPLETED;
+    }
 }
