@@ -1,94 +1,153 @@
 package org.jnu.unimart.pojo;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "reviews")
-public class Review{
+public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
-    private int reviewId;
-    @Column(name = "transaction_id")
-    private int transactionId;
-    @Column(name = "review_content_buyer")
-    private String reviewContentBuyer; //买家评价内容
-    @Column(name = "buyer_rating")
-    private double buyerRating; // 买家评分
-    @Column(name = "review_content_seller")
-    private String reviewContentSeller;//卖家评价内容
-    @Column(name = "seller_rating")
-    private double sellerRating; //卖家评分
-    @Column(name = "review_time")
-    private LocalDateTime reviewTime; //评分时间
+    private Integer reviewId;
 
-    public int getReviewId() {
+    @Column(name = "transaction_id", nullable = false)
+    private Integer transactionId;
+
+    @Column(name = "from_user_id", nullable = false)
+    private Integer fromUserId;
+
+    @Column(name = "to_user_id", nullable = false)
+    private Integer toUserId;
+
+    @Column(name = "rating", nullable = false)
+    private Integer rating;
+
+    @Column(name = "comment")
+    private String comment;
+
+    @Column(name = "is_anonymous", nullable = false)
+    private Boolean isAnonymous = false;
+
+    @Column(name = "create_time", nullable = false, insertable = true, updatable = false)
+    private LocalDateTime createTime;
+
+    @Column(name = "update_time", nullable = false, insertable = true, updatable = true)
+    private LocalDateTime updateTime;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<ReviewImage> images;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createTime == null) {
+            createTime = LocalDateTime.now();
+        }
+        if (updateTime == null) {
+            updateTime = LocalDateTime.now();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updateTime = LocalDateTime.now();
+    }
+    // getters & setters
+
+    public Integer getReviewId() {
         return reviewId;
     }
 
-    public void setReviewId(int reviewId) {
+    public void setReviewId(Integer reviewId) {
         this.reviewId = reviewId;
     }
 
-    public int getTransactionId() {
+    public Integer getTransactionId() {
         return transactionId;
     }
 
-    public void setTransactionId(int transactionId) {
+    public void setTransactionId(Integer transactionId) {
         this.transactionId = transactionId;
     }
 
-    public String getReviewContentBuyer() {
-        return reviewContentBuyer;
+    public Integer getFromUserId() {
+        return fromUserId;
     }
 
-    public void setReviewContentBuyer(String reviewContentBuyer) {
-        this.reviewContentBuyer = reviewContentBuyer;
+    public void setFromUserId(Integer fromUserId) {
+        this.fromUserId = fromUserId;
     }
 
-    public double getBuyerRating() {
-        return buyerRating;
+    public Integer getToUserId() {
+        return toUserId;
     }
 
-    public void setBuyerRating(double buyerRating) {
-        this.buyerRating = buyerRating;
+    public void setToUserId(Integer toUserId) {
+        this.toUserId = toUserId;
     }
 
-    public String getReviewContentSeller() {
-        return reviewContentSeller;
+    public Integer getRating() {
+        return rating;
     }
 
-    public void setReviewContentSeller(String reviewContentSeller) {
-        this.reviewContentSeller = reviewContentSeller;
+    public void setRating(Integer rating) {
+        this.rating = rating;
     }
 
-    public double getSellerRating() {
-        return sellerRating;
+    public String getComment() {
+        return comment;
     }
 
-    public void setSellerRating(double sellerRating) {
-        this.sellerRating = sellerRating;
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
-    public LocalDateTime getReviewTime() {
-        return reviewTime;
+    public Boolean getAnonymous() {
+        return isAnonymous;
     }
 
-    public void setReviewTime(LocalDateTime reviewTime) {
-        this.reviewTime = reviewTime;
+    public void setAnonymous(Boolean anonymous) {
+        isAnonymous = anonymous;
     }
 
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public List<ReviewImage> getImages() {
+        return images;
+    }
+
+    public void setImages(List<ReviewImage> images) {
+        this.images = images;
+    }
+
+    @Override
     public String toString() {
         return "Review{" +
                 "reviewId=" + reviewId +
                 ", transactionId=" + transactionId +
-                ", reviewContentBuyer='" + reviewContentBuyer + '\'' +
-                ", buyerRating=" + buyerRating +
-                ", reviewContentSeller='" + reviewContentSeller + '\'' +
-                ", sellerRating=" + sellerRating +
-                ", reviewTime=" + reviewTime +
+                ", fromUserId=" + fromUserId +
+                ", toUserId=" + toUserId +
+                ", rating=" + rating +
+                ", comment='" + comment + '\'' +
+                ", isAnonymous=" + isAnonymous +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                ", images=" + images +
                 '}';
     }
 }
