@@ -1,0 +1,19 @@
+### WebSocket连接测试
+WEBSOCKET ws://localhost:8080/ws
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjdXNvNSIsIlVzZXJJZCI6MTMsImlhdCI6MTczNDI0MDU2Miwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImV4cCI6MTczNDMyNjk2Mn0.7ppekIwLX296jfs-JE8crDNFmbKrWAdNNnt8xBnTTEfP0IC5_42I7A0zP9TlBNs95qQmeWMjEIJCZuobsnlGRg
+
+
+### 发送消息到聊天端点
+MESSAGE /app/chat
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjdXNvNSIsIlVzZXJJZCI6MTMsImlhdCI6MTczNDI0MDU2Miwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImV4cCI6MTczNDMyNjk2Mn0.7ppekIwLX296jfs-JE8crDNFmbKrWAdNNnt8xBnTTEfP0IC5_42I7A0zP9TlBNs95qQmeWMjEIJCZuobsnlGRg
+
+
+{
+    "receiverId": 2,
+    "content": "测试消息"
+}
+
+### 订阅消息
+SUBSCRIBE /topic/messages/2

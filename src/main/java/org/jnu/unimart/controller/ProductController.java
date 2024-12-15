@@ -1,21 +1,18 @@
 package org.jnu.unimart.controller;
 
 import jakarta.validation.Valid;
-import org.jnu.unimart.exception.ProductNotFoundException;
 import org.jnu.unimart.pojo.Product;
 import org.jnu.unimart.security.UserDetailsImpl;
 import org.jnu.unimart.service.ProductService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/products")
@@ -28,28 +25,15 @@ public class ProductController {
         this.productService = productService;
     }
 
+
+
     /**
-     * 查询所有产品，支持分页和排序，开放给所有人
-     * @return
+     * 查询所有可购买的产品（未售出）
      */
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> products = productService.getAllProducts();
+        List<Product> products = productService.getAvailableProducts();
         return ResponseEntity.ok(products);
-    }
-
-
-    /**
-     * 查询单个产品，通过产品 ID 查找，开放给所有人
-     * 如果产品不存在，则返回 404 错误
-     * @param id 产品的唯一标识符
-     * @return 返回找到的产品信息，若产品不存在则抛出 ProductNotFoundException
-     */
-    @GetMapping("/{id}")
-    @PreAuthorize("permitAll()")
-    public ResponseEntity<Product> getProductById(@PathVariable int id) {
-        Product product = productService.getProductById(id);
-        return ResponseEntity.ok(product);
     }
 
     /**
@@ -115,7 +99,18 @@ public class ProductController {
         return product != null && (userDetails.getId()==product.getSellID());
     }
 
-
+    /**
+     * 查询单个产品，通过产品 ID 查找，开放给所有人
+     * 如果产品不存在，则返回 404 错误
+     * @param id 产品的唯一标识符
+     * @return 返回找到的产品信息，若产品不存在则抛出 ProductNotFoundException
+     */
+    @GetMapping("/{id}")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Product> getProductById(@PathVariable int id) {
+        Product product = productService.getProductById(id);
+        return ResponseEntity.ok(product);
+    }
 
 
     /**
@@ -163,6 +158,25 @@ public class ProductController {
 
         // 返回搜索结果
         return ResponseEntity.ok(products);
+    }
+
+    /**
+     * 根据分类ID查询产品
+     */
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Integer categoryId) {
+        List<Product> products = productService.getProductsByCategory(categoryId);
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<Product>> getUserProducts(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+        try {
+            List<Product> products = productService.getProductsBySellerId(currentUser.getId());
+            return ResponseEntity.ok(products);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 }

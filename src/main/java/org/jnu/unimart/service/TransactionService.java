@@ -14,4 +14,6 @@ public interface TransactionService {
     List<Transaction> getTransactionsByBuyer(int buyerId);
     List<Transaction> getTransactionsBySeller(int sellerId);
     Transaction getTransactionById(int transactionId);
+
+    Transaction enrichTransactionWithProductInfo(Transaction transaction);
 }

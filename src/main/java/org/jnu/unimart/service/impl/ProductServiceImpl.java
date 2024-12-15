@@ -1,25 +1,19 @@
 package org.jnu.unimart.service.impl;
 
 import jakarta.transaction.Transactional;
+import org.jnu.unimart.enums.TransactionStatus;
 import org.jnu.unimart.exception.CategoryNotFoundException;
 import org.jnu.unimart.exception.ProductNotFoundException;
 import org.jnu.unimart.exception.UserNotFoundException;
-import org.jnu.unimart.pojo.Category;
-import org.jnu.unimart.pojo.Product;
-import org.jnu.unimart.pojo.Tag;
-import org.jnu.unimart.pojo.User;
+import org.jnu.unimart.pojo.*;
 import org.jnu.unimart.repository.CategoryRepository;
 import org.jnu.unimart.repository.ProductRepository;
 import org.jnu.unimart.repository.TagRepository;
-import org.jnu.unimart.service.CategoryService;
-import org.jnu.unimart.service.ProductService;
-import org.jnu.unimart.service.TagService;
-import org.jnu.unimart.service.UserService;
+import org.jnu.unimart.repository.TransactionRepository;
+import org.jnu.unimart.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -37,6 +31,7 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryService categoryService;
     private final TagService tagService;
     private final UserService userService; // 使用接口
+    private final TransactionRepository transactionRepository;
 
     @Autowired
     public ProductServiceImpl(ProductRepository productRepository,
@@ -44,13 +39,37 @@ public class ProductServiceImpl implements ProductService {
                               TagRepository tagRepository,
                               CategoryService categoryService,
                               TagService tagService,
-                              UserService userService) { // 使用接口
+                              UserService userService,
+                              TransactionRepository transactionRepository) { // 使用接口
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
         this.categoryService = categoryService;
         this.tagService = tagService;
         this.userService = userService;
+        this.transactionRepository = transactionRepository;
+    }
+
+
+    @Override
+    public List<Product> getAvailableProducts() {
+        // 获取所有已支付或已完成的交易
+        List<Transaction> soldTransactions = transactionRepository.findByTransactionStatusIn(
+                Arrays.asList(TransactionStatus.PAID, TransactionStatus.COMPLETED)
+        );
+
+        // 从交易记录中获取商品ID
+        List<Integer> soldProductIds = soldTransactions.stream()
+                .map(transaction -> transaction.getProduct().getProductId())
+                .collect(Collectors.toList());
+
+        // 如果没有已售出的商品，返回所有商品
+        if (soldProductIds.isEmpty()) {
+            return productRepository.findAll();
+        }
+
+        // 返回未售出的商品
+        return productRepository.findByProductIdNotIn(soldProductIds);
     }
 
 
@@ -336,4 +355,13 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByProductNameContaining(keyword, sort);
     }
 
+    @Override
+    public List<Product> getProductsByCategory(Integer categoryId) {
+        return productRepository.findByCategoryCategoryId(categoryId);
+    }
+
+    @Override
+    public List<Product> getProductsBySellerId(int sellerId) {
+        return productRepository.findBySellID(sellerId);
+    }
 }

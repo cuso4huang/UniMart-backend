@@ -128,6 +128,28 @@ public class TransactionController {
         return ResponseEntity.ok(transaction.getTransactionStatus());
     }
 
+    /**
+     * 获取交易详情
+     */
+    @GetMapping("/{transactionId}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<Transaction> getTransactionDetail(@PathVariable int transactionId,
+                                                            @AuthenticationPrincipal UserDetailsImpl currentUser) {
+        Transaction transaction = transactionService.getTransactionById(transactionId);
+
+        // 验证权限：只有买家、卖家或管理员可以查看交易详情
+        if ((transaction.getBuyer().getUserId() != currentUser.getId()) &&
+                (transaction.getSeller().getUserId() != currentUser.getId()) &&
+                !currentUser.hasRole("ADMIN")) {
+            return ResponseEntity.status(403).build();
+        }
+
+        // 补充商品信息
+        transaction = transactionService.enrichTransactionWithProductInfo(transaction);
+
+        return ResponseEntity.ok(transaction);
+    }
+
     // 定义 TransactionRequest DTO 类
     public static class TransactionRequest {
         private int sellerId;

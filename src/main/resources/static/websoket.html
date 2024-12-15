@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket测试</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<div>
+    <h3>WebSocket测试</h3>
+    <div>
+        <label>用户ID：</label>
+        <input type="text" id="userId" />
+        <label>JWT Token：</label>
+        <input type="text" id="jwtToken" style="width: 300px;" />
+        <button onclick="connect()">连接</button>
+        <button onclick="disconnect()">断开</button>
+    </div>
+    <div>
+        <label>接收者ID：</label>
+        <input type="text" id="receiverId" />
+        <label>消息内容：</label>
+        <input type="text" id="messageContent" />
+        <button onclick="sendMessage()">发送消息</button>
+    </div>
+    <div>
+        <h4>接收到的消息：</h4>
+        <div id="messages"></div>
+    </div>
+</div>
+
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const userId = document.getElementById('userId').value;
+        const token = document.getElementById('jwtToken').value;
+        
+        if (!userId || !token) {
+            alert('请输入用户ID和JWT Token');
+            return;
+        }
+
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        
+        const connectHeaders = {
+            'Authorization': 'Bearer ' + token
+        };
+
+        stompClient.connect(
+            connectHeaders,
+            frame => {
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/topic/messages/' + userId, message => {
+                    showMessage(JSON.parse(message.body));
+                });
+            },
+            error => {
+                console.error('连接错误:', error);
+                alert('连接失败: ' + error);
+            }
+        );
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        console.log("已断开连接");
+    }
+
+    function sendMessage() {
+        const receiverId = document.getElementById('receiverId').value;
+        const content = document.getElementById('messageContent').value;
+
+        if (stompClient && stompClient.connected) {
+            const message = {
+                receiverId: parseInt(receiverId),
+                content: content
+            };
+
+            stompClient.send("/app/chat", {}, JSON.stringify(message));
+        } else {
+            alert("未连接到WebSocket服务器");
+        }
+    }
+
+    function showMessage(message) {
+        const messagesDiv = document.getElementById('messages');
+        const messageElement = document.createElement('div');
+        messageElement.textContent = `${new Date().toLocaleString()} - ${message.content}`;
+        messagesDiv.appendChild(messageElement);
+    }
+</script>
+</body>
+</html>

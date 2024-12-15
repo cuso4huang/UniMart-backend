@@ -14,4 +14,14 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     Optional<Product> findByIdWithTags(@Param("id") int id);
     List<Product> findAll(); // 返回所有产品
     List<Product> findByProductNameContaining(String keyword,  Sort sort);
+    /**
+     * 根据分类ID查询商品列表
+     * @param categoryId 分类ID
+     * @return 商品列表
+     */
+    List<Product> findByCategoryCategoryId(Integer categoryId);
+
+    List<Product> findByProductIdNotIn(List<Integer> soldProductIds);
+
+    List<Product> findBySellID(int sellerId);
 }

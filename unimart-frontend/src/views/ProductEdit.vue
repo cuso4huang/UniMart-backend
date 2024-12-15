@@ -1,0 +1,283 @@
+<template>
+  <div class="product-edit">
+    <nav-bar></nav-bar>
+    <div class="content">
+      <el-card class="form-card">
+        <div slot="header">
+          <span>编辑商品</span>
+        </div>
+        
+        <el-form 
+          ref="productForm"
+          :model="productForm"
+          :rules="rules"
+          label-width="100px"
+          v-loading="loading"
+        >
+          <el-form-item label="商品名称" prop="productName">
+            <el-input 
+              v-model="productForm.productName"
+              placeholder="请输入商品名称"
+              maxlength="50"
+              show-word-limit
+            ></el-input>
+          </el-form-item>
+
+          <el-form-item label="商品描述" prop="productDescription">
+            <el-input 
+              type="textarea"
+              v-model="productForm.productDescription"
+              placeholder="请详细描述商品的具体情况，例如：使用时长、新旧程度、是否有损坏等"
+              :rows="4"
+              maxlength="500"
+              show-word-limit
+            ></el-input>
+          </el-form-item>
+
+          <el-form-item label="商品价格" prop="price">
+            <el-input-number 
+              v-model="productForm.price"
+              :min="0"
+              :precision="2"
+              :step="0.01"
+              controls-position="right"
+              placeholder="请输入商品价格"
+            ></el-input-number>
+          </el-form-item>
+
+          <el-form-item label="商品分类" prop="categoryId">
+            <el-select 
+              v-model="productForm.categoryId"
+              placeholder="请选择商品分类"
+            >
+              <el-option
+                v-for="item in categories"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="商品图片" prop="images">
+            <el-upload
+              action="/api/upload"
+              list-type="picture-card"
+              :on-preview="handlePictureCardPreview"
+              :on-remove="handleRemove"
+              :on-success="handleUploadSuccess"
+              :before-upload="beforeUpload"
+              :headers="uploadHeaders"
+              :file-list="fileList"
+              :limit="5"
+              multiple
+            >
+              <i class="el-icon-plus"></i>
+            </el-upload>
+            <el-dialog :visible.sync="dialogVisible">
+              <img width="100%" :src="dialogImageUrl" alt="">
+            </el-dialog>
+          </el-form-item>
+
+          <el-form-item>
+            <el-button type="primary" @click="submitForm" :loading="submitting">保存修改</el-button>
+            <el-button @click="$router.push('/my')">返回</el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
+  </div>
+</template>
+
+<script>
+import NavBar from '@/components/NavBar.vue'
+import { getProductDetail, updateProduct } from '@/api/product'
+import { getToken } from '@/utils/auth'
+import { BASE_URL } from '@/utils/request'
+
+export default {
+  name: 'ProductEdit',
+  components: {
+    NavBar
+  },
+  data() {
+    return {
+      loading: false,
+      submitting: false,
+      dialogImageUrl: '',
+      dialogVisible: false,
+      fileList: [],
+      productForm: {
+        productName: '',
+        productDescription: '',
+        price: 0,
+        categoryId: '',
+        images: []
+      },
+      rules: {
+        productName: [
+          { required: true, message: '请输入商品名称', trigger: 'blur' },
+          { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+        ],
+        productDescription: [
+          { required: true, message: '请输入商品描述', trigger: 'blur' },
+          { min: 10, max: 500, message: '长度在 10 到 500 个字符', trigger: 'blur' }
+        ],
+        price: [
+          { required: true, message: '请输入商品价格', trigger: 'blur' },
+          { type: 'number', message: '价格必须为数字', trigger: 'blur' },
+          { validator: (rule, value, callback) => {
+            if (value <= 0) {
+              callback(new Error('价格必须大于0'))
+            } else {
+              callback()
+            }
+          }, trigger: 'blur' }
+        ],
+        categoryId: [
+          { required: true, message: '请选择商品分类', trigger: 'change' }
+        ]
+      },
+      categories: [
+        { id: 1, name: '教材书籍' },
+        { id: 2, name: '电子产品' },
+        { id: 3, name: '日常用品' },
+        { id: 4, name: '其他' }
+      ]
+    }
+  },
+  computed: {
+    uploadHeaders() {
+      return {
+        Authorization: getToken()
+      }
+    },
+    productId() {
+      return this.$route.params.id
+    }
+  },
+  created() {
+    this.fetchProductDetail()
+  },
+  methods: {
+    async fetchProductDetail() {
+      this.loading = true
+      try {
+        const response = await getProductDetail(this.productId)
+        if (response) {
+          // 填充表单数据
+          this.productForm = {
+            productName: response.productName,
+            productDescription: response.productDescription,
+            price: response.price,
+            categoryId: response.category.categoryId,
+            images: response.image ? [`${BASE_URL}${response.image}`] : []
+          }
+          
+          // 设置文件列表
+          if (response.image) {
+            this.fileList = [{
+              name: response.image.split('/').pop(),
+              url: `${BASE_URL}${response.image}`
+            }]
+          }
+        }
+      } catch (error) {
+        console.error('获取商品详情失败:', error)
+        this.$message.error('获取商品详情失败')
+        this.$router.push('/my')
+      } finally {
+        this.loading = false
+      }
+    },
+    handleRemove(file) {
+      const index = this.productForm.images.indexOf(file.url)
+      if (index !== -1) {
+        this.productForm.images.splice(index, 1)
+      }
+    },
+    handlePictureCardPreview(file) {
+      this.dialogImageUrl = file.url
+      this.dialogVisible = true
+    },
+    handleUploadSuccess(response) {
+      if (response.url) {
+        this.productForm.images.push(response.url)
+      }
+    },
+    beforeUpload(file) {
+      const isImage = file.type.startsWith('image/')
+      const isLt2M = file.size / 1024 / 1024 < 2
+
+      if (!isImage) {
+        this.$message.error('只能上传图片文件!')
+        return false
+      }
+      if (!isLt2M) {
+        this.$message.error('图片大小不能超过 2MB!')
+        return false
+      }
+      return true
+    },
+    async submitForm() {
+      try {
+        await this.$refs.productForm.validate()
+        
+        if (this.productForm.images.length === 0) {
+          this.$message.warning('请至少上传一张商品���片')
+          return
+        }
+        
+        this.submitting = true
+        await updateProduct(this.productId, {
+          productName: this.productForm.productName,
+          productDescription: this.productForm.productDescription,
+          price: this.productForm.price,
+          categoryId: this.productForm.categoryId,
+          image: this.productForm.images[0] // 目前只取第一张图片
+        })
+        
+        this.$message.success('修改成功')
+        this.$router.push('/my')
+      } catch (error) {
+        console.error('修改商品失败:', error)
+        this.$message.error(error.response?.data?.message || '修改失败，请稍后重试')
+      } finally {
+        this.submitting = false
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.product-edit {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.content {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+.form-card {
+  margin-bottom: 20px;
+}
+
+.el-upload-list--picture-card .el-upload-list__item {
+  width: 100px;
+  height: 100px;
+}
+
+.el-upload--picture-card {
+  width: 100px;
+  height: 100px;
+  line-height: 100px;
+}
+
+.el-input-number {
+  width: 200px;
+}
+</style> 

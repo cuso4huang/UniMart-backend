@@ -13,6 +13,7 @@ import org.jnu.unimart.pojo.User;
 import org.jnu.unimart.repository.TransactionRepository;
 import org.jnu.unimart.repository.ProductRepository;
 import org.jnu.unimart.repository.UserRepository;
+import org.jnu.unimart.service.ProductService;
 import org.jnu.unimart.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,15 +24,21 @@ import java.util.List;
 @Service
 @Transactional
 public class TransactionServiceImpl implements TransactionService {
+    private final ProductService productService;
+    private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
+    private final ProductRepository productRepository;
 
-    @Autowired
-    private TransactionRepository transactionRepository;
+   @Autowired
+   public TransactionServiceImpl(ProductService productService,TransactionRepository transactionRepository,
+                                 UserRepository userRepository, ProductRepository productRepository) {
+       this.productService = productService;
+       this.transactionRepository = transactionRepository;
+       this.userRepository = userRepository;
+       this.productRepository = productRepository;
+   }
 
-    @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private ProductRepository productRepository;
 
     /**
      * 提供必要的参数，创建订单
@@ -129,5 +136,15 @@ public class TransactionServiceImpl implements TransactionService {
             default:
                 return false;
         }
+    }
+    @Override
+    public Transaction enrichTransactionWithProductInfo(Transaction transaction) {
+        // 获取商品信息
+        Product product = productService.getProductById(transaction.getProduct().getProductId());
+        if (product != null) {
+            transaction.getProduct().setProductName(product.getProductName());
+            // 可以设置其他需要的商品信息
+        }
+        return transaction;
     }
 }

@@ -41,6 +41,31 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
+    @Override
+    public boolean changePassword(int userId, String oldPassword, String newPassword) {
+        // 1. 获取用户
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new UserNotFoundException("用户不存在");
+        }
+
+        User user = userOpt.get();
+
+        // 2. 验证旧密码是否正确
+        if (!passwordEncoder.matches(oldPassword, user.getUserPassword())) {
+            return false;
+        }
+
+        // 3. 加密新密码并更新
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+        user.setUserPassword(encodedNewPassword);
+
+        // 4. 保存更新
+        userRepository.save(user);
+
+        return true;
+    }
+
     /**
      * 通过id获取用户信息，
      * Optional<User> 当可以接受一个null

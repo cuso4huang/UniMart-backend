@@ -15,4 +15,6 @@ public interface UserService {
     public void deleteUser(int id);
     public Optional<User> getUserByAccount(String account);
 
+    boolean changePassword(int userId, String oldPassword, String newPassword);
+
 }
