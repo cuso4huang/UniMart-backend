@@ -197,7 +197,9 @@ public class ProductServiceImpl implements ProductService {
             logger.error("Product with ID {} not found", id);
             throw new IllegalArgumentException("Product with ID " + id + " not found");
         }
-        return byId.get();
+        Product product = byId.get();
+        product.setViewCount(product.getViewCount() + 1);
+        return product;
     }
 
     /**

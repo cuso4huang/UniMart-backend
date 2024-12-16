@@ -1,7 +1,9 @@
 package org.jnu.unimart.controller;
 
 import jakarta.validation.Valid;
+import org.jnu.unimart.payload.ProductRequest;
 import org.jnu.unimart.pojo.Product;
+import org.jnu.unimart.repository.CategoryRepository;
 import org.jnu.unimart.security.UserDetailsImpl;
 import org.jnu.unimart.service.ProductService;
 import org.springframework.data.domain.*;
@@ -19,10 +21,12 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final CategoryRepository categoryRepository;
 
     // 构造函数注入
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, CategoryRepository categoryRepository) {
         this.productService = productService;
+        this.categoryRepository = categoryRepository;
     }
 
 
@@ -61,20 +65,24 @@ public class ProductController {
      * 在请求中必须提供产品的 ID 和更新后的数据。
      *
      * @param id 要更新的产品 ID
-     * @param product 更新后的产品信息
+     * @param productRequest 更新后的产品信息
      * @param currentUser 当前登录的用户信息（从 JWT 中提取）
      * @return 返回更新后的产品信息，如果产品不存在则返回 404 Not Found
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or @productController.isProductOwner(#id, authentication)")
-    public ResponseEntity<Product> updateProduct(@PathVariable int id, @Valid @RequestBody Product product, @AuthenticationPrincipal UserDetailsImpl currentUser) {
+    public ResponseEntity<Product> updateProduct(@PathVariable int id, @Valid @RequestBody ProductRequest productRequest, @AuthenticationPrincipal UserDetailsImpl currentUser) {
         // 查询产品，确保产品存在
         Product productById = productService.getProductById(id);
         // 确保产品 ID 与请求中的 ID 保持一致
-        product.setProductId(id);
+        productById.setProductDescription(productRequest.getProductDescription());
+        productById.setProductName(productRequest.getProductName());
+        productById.setCategory(categoryRepository.getById(productRequest.getCategoryId()));
+        productById.setPrice(productRequest.getPrice());
+        productById.setImage(productRequest.getImage());
 
         // 调用 Service 层更新产品信息
-        Product updatedProduct = productService.updateProduct(product);
+        Product updatedProduct = productService.updateProduct(productById);
 
         // 返回更新后的产品信息
         return ResponseEntity.ok(updatedProduct);
