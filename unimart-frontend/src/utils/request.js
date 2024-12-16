@@ -2,14 +2,27 @@ import axios from 'axios'
 import { getToken } from '@/utils/auth'
 import router from '@/router'
 import store from '@/store'
+
+// 添加基础URL
+export const BASE_URL = 'http://localhost:8080'  // 或者你的后端服务器地址
+
 // 创建 axios 实例
 const service = axios.create({
   baseURL: '/api',
   timeout: 10000,
   withCredentials: true,
 })
-// 添加基础URL
-export const BASE_URL = 'http://localhost:8080'  // 或者你的后端服务器地址
+
+// 修改图片 URL 处理函数
+export function getFullImageUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  // 根据环境返回正确的URL
+  return process.env.NODE_ENV === 'development' 
+    ? `http://localhost:3000/uploads/${path}`  // 开发环境用3000端口
+    : `${BASE_URL}/uploads/${path}`           // 生产环境用8080端口
+}
+
 // 请求拦截器
 service.interceptors.request.use(
   config => {
@@ -42,6 +55,16 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   response => {
     console.log('Response Data:', response.data)
+    // 处理图片响应
+    if (response.config.responseType === 'blob') {
+      // 如果是缩略图请求，直接返回blob URL
+      if (response.config.url.includes('thumbnail')) {
+        return URL.createObjectURL(response.data)
+      }
+      // 其他图片请求返回原始数据
+      return response.data
+    }
+    
     return response.data
   },
   error => {
@@ -86,6 +109,12 @@ service.interceptors.response.use(
       console.error('未收到响应:', error.request)
     } else {
       console.error('请求配置错误:', error.message)
+    }
+
+    // 处理图片加载错误
+    if (error.config && error.config.responseType === 'blob') {
+      console.error('图片加载失败:', error)
+      return '/path/to/fallback/image.jpg'  // 返回默认图片
     }
 
     return Promise.reject({

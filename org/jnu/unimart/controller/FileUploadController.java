@@ -2,7 +2,10 @@ package org.jnu.unimart.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -44,7 +47,7 @@ public class FileUploadController {
             System.out.println("访问路径: " + accessPath + filename);
 
             Map<String, String> response = new HashMap<>();
-            response.put("url", accessPath + filename);
+            response.put("url", "http://localhost:8080" + accessPath + filename);
             response.put("filename", filename);
             response.put("fullPath", path.toString());
 
@@ -61,4 +64,4 @@ public class FileUploadController {
             return ResponseEntity.badRequest().body("文件上传失败: " + e.getMessage());
         }
     }
-}
+} 

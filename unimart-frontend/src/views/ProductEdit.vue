@@ -202,7 +202,13 @@ export default {
     },
     handleUploadSuccess(response) {
       if (response.url) {
-        this.productForm.images.push(response.url)
+        const fullUrl = `${BASE_URL}${response.url}`
+        this.productForm.images.push(fullUrl)
+        // 更新文件列表显示
+        this.fileList.push({
+          name: response.url.split('/').pop(),
+          url: fullUrl
+        })
       }
     },
     beforeUpload(file) {
@@ -224,17 +230,19 @@ export default {
         await this.$refs.productForm.validate()
         
         if (this.productForm.images.length === 0) {
-          this.$message.warning('请至少上传一张商品���片')
+          this.$message.warning('请至少上传一张商品图片')
           return
         }
         
         this.submitting = true
+        // 提交时去掉 BASE_URL 前缀
+        const imageUrl = this.productForm.images[0].replace(BASE_URL, '')
         await updateProduct(this.productId, {
           productName: this.productForm.productName,
           productDescription: this.productForm.productDescription,
           price: this.productForm.price,
           categoryId: this.productForm.categoryId,
-          image: this.productForm.images[0] // 目前只取第一张图片
+          image: imageUrl // 目前只取第一张图片
         })
         
         this.$message.success('修改成功')

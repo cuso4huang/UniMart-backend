@@ -31,10 +31,10 @@
               <el-radio-button label="">全部</el-radio-button>
               <el-radio-button 
                 v-for="category in categories" 
-                :key="category.categoryId" 
-                :label="category.categoryId"
+                :key="category.id" 
+                :label="category.id"
               >
-                {{ category.categoryName }}
+                {{ category.name }}
               </el-radio-button>
             </el-radio-group>
           </div>
@@ -59,7 +59,7 @@
             >
               <div class="product-image">
                 <el-image 
-                  :src="product.image || require('@/assets/default-product.png')"
+                  :src="product.image ? `http://localhost:8080${product.image}` : require('@/assets/default-product.png')"
                   fit="cover"
                 >
                   <div slot="error" class="image-slot">
@@ -137,8 +137,10 @@ export default {
       searchQuery: '',
       selectedCategory: '',
       categories: [
-        { categoryId: 14, categoryName: '小黑子' },
-        { categoryId: 16, categoryName: '电子产品' }
+        { id: 1, name: '教材书籍' },
+        { id: 2, name: '电子产品' },
+        { id: 3, name: '日常用品' },
+        { id: 4, name: '其他' }
       ]
     }
   },
@@ -361,5 +363,21 @@ export default {
 
 .load-more .el-button {
   font-size: 15px;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.category-item:hover {
+  background-color: #f5f5f5;
 }
 </style> 

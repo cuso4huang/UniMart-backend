@@ -6,7 +6,8 @@
         <div class="product-layout">
           <div class="product-image">
             <el-image 
-              :src="product.image || require('@/assets/default-product.png')" 
+            :src="product.image ? `http://localhost:8080${product.image}` : require('@/assets/default-product.png')"
+
               fit="cover"
             ></el-image>
           </div>

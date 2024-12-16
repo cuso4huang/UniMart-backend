@@ -96,6 +96,7 @@
 import NavBar from '@/components/NavBar.vue'
 import { publishProduct } from '@/api/product'
 import { getToken } from '@/utils/auth'
+import { BASE_URL } from '@/utils/request'
 
 export default {
   name: 'PublishProduct',
@@ -180,8 +181,13 @@ export default {
     },
     handleUploadSuccess(response) {
       if (response.url) {
-        this.productForm.images.push(response.url)
-        this.$refs.productForm.validateField('images')
+        const fullUrl = `${BASE_URL}${response.url}`
+        this.productForm.images.push(fullUrl)
+        // 更新文件列表显示
+        this.fileList.push({
+          name: response.url.split('/').pop(),
+          url: fullUrl
+        })
       }
     },
     beforeUpload(file) {
@@ -202,22 +208,21 @@ export default {
       try {
         await this.$refs.productForm.validate()
         
-        const uploadingFiles = document.querySelectorAll('.el-upload-list__item.is-uploading')
-        if (uploadingFiles.length > 0) {
-          this.$message.warning('请等待所有图片上传完成')
+        if (this.productForm.images.length === 0) {
+          this.$message.warning('请至少上传一张商品图片')
           return
         }
         
         this.isSubmitting = true
-        const submitData = {
+        // 提交时去掉 BASE_URL 前缀
+        const imageUrl = this.productForm.images[0].replace(BASE_URL, '')
+        await publishProduct({
           productName: this.productForm.productName,
           productDescription: this.productForm.productDescription,
           price: this.productForm.price,
           categoryId: this.productForm.categoryId,
-          images: this.productForm.images
-        }
-        
-        await publishProduct(submitData)
+          image: imageUrl // 目前只取第一张图片
+        })
         this.$message.success('商品发布成功')
         this.$router.push('/my')
       } catch (error) {

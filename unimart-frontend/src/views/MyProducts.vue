@@ -24,7 +24,7 @@
             >
               <div class="product-image-container">
                 <img 
-                  :src="product.image ? `${BASE_URL}${product.image}` : require('@/assets/default-product.png')"
+                  :src="product.image ? `http://localhost:8080${product.image}` : require('@/assets/default-product.png')"
                   class="product-image"
                   @click="handleImageClick(product)"
                 >

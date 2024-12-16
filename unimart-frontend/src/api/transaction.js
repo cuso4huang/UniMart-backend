@@ -1,6 +1,17 @@
 import request from '@/utils/request'
 
 /**
+ * 获取商品图片
+ */
+export function getProductImage(imageId) {
+  return request({
+    url: `/uploads/${imageId}`,
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
+/**
  * 创建交易
  */
 export function createTransaction(data) {
@@ -11,7 +22,8 @@ export function createTransaction(data) {
       productId: data.productId,
       sellerId: data.sellerId,
       totalAmount: data.totalAmount,
-      paymentMethod: data.paymentMethod
+      paymentMethod: data.paymentMethod,
+      imageUrl: data.imageUrl
     }
   })
 }
