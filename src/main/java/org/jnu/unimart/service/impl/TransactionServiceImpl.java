@@ -147,4 +147,60 @@ public class TransactionServiceImpl implements TransactionService {
         }
         return transaction;
     }
+
+    @Override
+    public Transaction updateTransaction(Transaction transaction) {
+        // 1. 验证交易是否存在
+        Transaction existingTransaction = transactionRepository.findById(transaction.getTransactionId())
+                .orElseThrow(() -> new OrderNotFoundException("Transaction not found with ID: " +
+                        transaction.getTransactionId()));
+
+        // 2. 验证状态转换是否合法
+        if (!isValidStatusTransition(existingTransaction.getTransactionStatus(),
+                transaction.getTransactionStatus())) {
+            throw new InvalidOrderStatusTransitionException(
+                    "Invalid status transition from " + existingTransaction.getTransactionStatus() +
+                            " to " + transaction.getTransactionStatus());
+        }
+
+        // 3. 更新交易信息
+        existingTransaction.setTransactionStatus(transaction.getTransactionStatus());
+
+        // 4. 根据不同状态执行相应的业务逻辑
+        switch (transaction.getTransactionStatus()) {
+            case PAID:
+                // 设置支付时间
+                existingTransaction.setTransactionTime(LocalDateTime.now());
+                break;
+
+            case COMPLETED:
+                // 设置完成时间
+                existingTransaction.setTransactionTime(LocalDateTime.now());
+                // 更新商品状态为已售出
+                Product product = existingTransaction.getProduct();
+                product.setPublishStatus(2);
+                productRepository.save(product);
+                break;
+
+            case CANCELLED:
+                // 设置取消时间
+                existingTransaction.setTransactionTime(LocalDateTime.now());
+                break;
+        }
+
+        // 5. 更新其他可变字段
+        if (transaction.getPaymentMethod() != null) {
+            existingTransaction.setPaymentMethod(transaction.getPaymentMethod());
+        }
+        if (transaction.getTotalAmount() != null) {
+            existingTransaction.setTotalAmount(transaction.getTotalAmount());
+        }
+
+        // 6. 保存更新
+        try {
+            return transactionRepository.save(existingTransaction);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update transaction: " + e.getMessage());
+        }
+    }
 }

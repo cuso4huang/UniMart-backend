@@ -16,4 +16,6 @@ public interface TransactionService {
     Transaction getTransactionById(int transactionId);
 
     Transaction enrichTransactionWithProductInfo(Transaction transaction);
+
+    Transaction updateTransaction(Transaction transaction);
 }

@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -43,6 +44,8 @@ public class TransactionController {
         );
         return ResponseEntity.status(201).body(transaction);
     }
+
+
 
     /**
      * 模拟支付
@@ -150,6 +153,112 @@ public class TransactionController {
         return ResponseEntity.ok(transaction);
     }
 
+
+    /**
+     * 取消交易
+     */
+    @PostMapping("/{transactionId}/cancel")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<Transaction> cancelTransaction(
+            @PathVariable int transactionId,
+            @AuthenticationPrincipal UserDetailsImpl currentUser) {
+
+        Transaction transaction = transactionService.getTransactionById(transactionId);
+
+        // 验证权限：只有买家或管理员可以取消交易
+        if (!currentUser.hasRole("ADMIN") &&
+                transaction.getBuyer().getUserId() != currentUser.getId()) {
+            return ResponseEntity.status(403).build();
+        }
+
+        // 只能取消待支付的交易
+        if (transaction.getTransactionStatus() != TransactionStatus.PENDING_PAYMENT) {
+            return ResponseEntity.status(400)
+                    .body(transaction);
+        }
+
+        transaction.setTransactionStatus(TransactionStatus.CANCELLED);
+        Transaction updatedTransaction = transactionService.updateTransaction(transaction);
+
+        return ResponseEntity.ok(updatedTransaction);
+    }
+
+    /**
+     * 完成交易
+     */
+    @PostMapping("/{transactionId}/complete")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<Transaction> completeTransaction(
+            @PathVariable int transactionId,
+            @AuthenticationPrincipal UserDetailsImpl currentUser) {
+
+        Transaction transaction = transactionService.getTransactionById(transactionId);
+
+        // 验证权限：只有买家或管理员可以完成交易
+        if (!currentUser.hasRole("ADMIN") &&
+                transaction.getBuyer().getUserId() != currentUser.getId()) {
+            return ResponseEntity.status(403).build();
+        }
+
+        // 只能完成已支付的交易
+        if (transaction.getTransactionStatus() != TransactionStatus.PAID) {
+            return ResponseEntity.status(400)
+                    .body(transaction);
+        }
+
+        transaction.setTransactionStatus(TransactionStatus.COMPLETED);
+        transaction.setTransactionTime(LocalDateTime.now());
+        Transaction updatedTransaction = transactionService.updateTransaction(transaction);
+
+        return ResponseEntity.ok(updatedTransaction);
+    }
+
+    /**
+     * 更新交易状态
+     */
+    @PutMapping("/{transactionId}/status")
+    @PreAuthorize("hasRole('ADMIN')")  // 只允许管理员直接修改状态
+    public ResponseEntity<Transaction> updateTransactionStatus(
+            @PathVariable int transactionId,
+            @RequestParam TransactionStatus newStatus) {
+
+        Transaction transaction = transactionService.getTransactionById(transactionId);
+        TransactionStatus oldStatus = transaction.getTransactionStatus();
+
+        // 验证状态转换的合法性
+        if (!isValidStatusTransition(oldStatus, newStatus)) {
+            return ResponseEntity.status(400)
+                    .body(transaction);
+        }
+
+        transaction.setTransactionStatus(newStatus);
+
+        // 如果转换为已完成状态，设置完成时间
+        if (newStatus == TransactionStatus.COMPLETED) {
+            transaction.setTransactionTime(LocalDateTime.now());
+        }
+
+        Transaction updatedTransaction = transactionService.updateTransaction(transaction);
+        return ResponseEntity.ok(updatedTransaction);
+    }
+
+    /**
+     * 验证状态转换是否合法
+     */
+    private boolean isValidStatusTransition(TransactionStatus oldStatus, TransactionStatus newStatus) {
+        switch (oldStatus) {
+            case PENDING_PAYMENT:
+                return newStatus == TransactionStatus.PAID ||
+                        newStatus == TransactionStatus.CANCELLED;
+            case PAID:
+                return newStatus == TransactionStatus.COMPLETED;
+            case COMPLETED:
+            case CANCELLED:
+                return false; // 已完成或已取消的订单不能再改变状态
+            default:
+                return false;
+        }
+    }
     // 定义 TransactionRequest DTO 类
     public static class TransactionRequest {
         private int sellerId;
